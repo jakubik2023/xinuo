@@ -3,7 +3,7 @@
 cp config.example.json config.json
 
 修改 config.json 文件
-在linkai个人中心   打开浏览器检查(F12) 刷新一下页面 找一个请求连接
+在linkai个人中心   打开浏览器检查(F12) 点击网络选项并且刷新一下页面 找一个请求连接
 在headers里拿取 Authorization和Cookie
 
 
