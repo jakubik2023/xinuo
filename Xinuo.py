@@ -32,8 +32,8 @@ class Xinuo(Plugin):
         self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
         try:
             self.conf = super().load_config()
-            self.authorization = self.conf["authorization"]
-            self.cookie = self.conf["cookie"]
+            self.authorization = self.conf["linkai_authorization"]
+            self.cookie = self.conf["linkai_cookie"]
         except:
             raise self.handle_error(e, "[Xinuo] init failed, ignore ")
         print("[Xinuo] inited")
