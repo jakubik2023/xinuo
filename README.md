@@ -1,4 +1,10 @@
+### chatgpt-on-wechat  插件
 
+```
+目前有
+linkai积分签到
+linkai总积分查看
+```
 
 ```
 克隆代码到插件目录 或者
