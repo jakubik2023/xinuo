@@ -32,8 +32,8 @@ class Xinuo(Plugin):
         self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
         try:
             self.conf = super().load_config()
-            self.authorization = self.conf["linkai_authorization"]
-            self.cookie = self.conf["linkai_cookie"]
+            self.linkai_authorization = self.conf["linkai_authorization"]
+            self.linkai_cookie = self.conf["linkai_cookie"]
             print("[Xinuo] inited")
         except:
             raise self.handle_error(e, "[Xinuo] init failed, ignore ")
@@ -57,12 +57,23 @@ class Xinuo(Plugin):
             reply.content += f"{msg}"
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS
+        elif content == "测试":
+            # msg = self.linkai_balance()
+            msg = "测试"
+            reply = Reply()
+            reply.type = ReplyType.TEXT
+            reply.content = "linkai积分\n"
+            reply.content += f"{msg}"
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS
 
-
-    def get_help_text(self, **kwargs):
+    def get_help_text(self, verbose=False, **kwargs):
         help_text = "发送关键词执行对应操作\n"
-        help_text += "输入 'linkai签到'， 将进行linkai每日积分签到操作\n"
-        help_text += "输入 'linkai积分'， 将进行linkai积分获取操作\n"
+        if  not verbose:
+            return help_text
+        help_text += "输入 'linkai签到'， 进行签到\n"
+        help_text += "输入 'linkai积分'， 进行总积分获取\n"
+        help_text += "输入 '测试'， 进行总积分获取\n"
         return help_text
 
 
@@ -74,9 +85,9 @@ class Xinuo(Plugin):
             headers = {
               'Accept': 'application/json, text/plain, */*',
               'Accept-Language': 'zh-CN,zh;q=0.9',
-              'Authorization': self.authorization,
+              'Authorization': self.linkai_authorization,
               'Connection': 'keep-alive',
-              'Cookie': self.cookie,
+              'Cookie': self.linkai_cookie,
               'Referer': 'https://chat.link-ai.tech/home',
               'Sec-Fetch-Dest': 'empty',
               'Sec-Fetch-Mode': 'cors',
@@ -113,10 +124,10 @@ class Xinuo(Plugin):
             headers = {
               'Accept': 'application/json, text/plain, */*',
               'Accept-Language': 'zh-CN,zh;q=0.9',
-              'Authorization': self.authorization,
+              'Authorization': self.linkai_authorization,
               'Connection': 'keep-alive',
               'Host': 'chat.link-ai.tech',
-              'Cookie': self.cookie,
+              'Cookie': self.linkai_cookie,
               'Referer': 'https://chat.link-ai.tech/console/account',
               'Sec-Fetch-Dest': 'empty',
               'Sec-Fetch-Mode': 'cors',
