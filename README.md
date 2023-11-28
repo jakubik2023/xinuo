@@ -16,13 +16,11 @@ linkai总积分查看
 cp config.example.json config.json
 
 修改 config.json 文件
-在linkai个人中心   打开浏览器检查(F12) 点击网络选项并且刷新一下页面 找一个请求连接
-在headers里拿取 Authorization和Cookie
-
+填入 帐号密码
 
 {
-  "linkai_authorization": "Bearer xxxxxxxxxxxxxx",
-  "linkai_cookie": "_gcl_au=xxxxxxxxxx"
+  "linkai_user": "xxxxxxxxxxxxxx",
+  "linkai_pwd": "xxxxxxxxxx"
 }
 
 ```

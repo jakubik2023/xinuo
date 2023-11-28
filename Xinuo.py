@@ -8,10 +8,11 @@
 
 
 
-import requests
-import json
 import re
+import json
+import time
 import plugins
+import requests
 from bridge.reply import Reply, ReplyType
 from plugins import *
 
@@ -21,7 +22,7 @@ from plugins import *
     desire_priority=1,                    # 插件的优先级
     hidden=False,                         # 插件是否隐藏
     desc="个人开发的一些常用工具",        # 插件的描述
-    version="0.0.2",                      # 插件的版本号
+    version="0.0.3",                      # 插件的版本号
     author="xinuo",                       # 插件的作者
 )
 
@@ -32,8 +33,9 @@ class Xinuo(Plugin):
         self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
         try:
             self.conf = super().load_config()
-            self.linkai_authorization = self.conf["linkai_authorization"]
-            self.linkai_cookie = self.conf["linkai_cookie"]
+            self.linkai_user = self.conf["linkai_user"]
+            self.linkai_pwd = self.conf["linkai_pwd"]
+            self.linkai_authorization = ""
             print("[Xinuo] inited")
         except:
             raise self.handle_error(e, "[Xinuo] init failed, ignore ")
@@ -62,96 +64,158 @@ class Xinuo(Plugin):
             msg = "测试"
             reply = Reply()
             reply.type = ReplyType.TEXT
-            reply.content = "linkai积分\n"
+            reply.content = "测试\n"
             reply.content += f"{msg}"
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS
 
     def get_help_text(self, verbose=False, **kwargs):
         help_text = "发送关键词执行对应操作\n"
-        if  not verbose:
+        if not verbose:
             return help_text
         help_text += "输入 'linkai签到'， 进行签到\n"
         help_text += "输入 'linkai积分'， 进行总积分获取\n"
-        help_text += "输入 '测试'， 进行总积分获取\n"
+        help_text += "输入 '测试'， 测试\n"
         return help_text
 
 
-    def linkai_sign_in(self):
-        msg = ""
+    def link_ai_login(self):
+        # linkai 登录
+        token = ""
         try:
-            url = "https://chat.link-ai.tech/api/chat/web/app/user/sign/in"
-            payload = {}
+            url = "https://link-ai.tech/api/login"
+            payload = f"username={self.linkai_user}&password={self.linkai_pwd}"
             headers = {
+              'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0',
               'Accept': 'application/json, text/plain, */*',
-              'Accept-Language': 'zh-CN,zh;q=0.9',
-              'Authorization': self.linkai_authorization,
+              'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
+              'Accept-Encoding': 'gzip, deflate, br',
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+              'Authorization': 'Bearer',
+              'Origin': 'https://link-ai.tech',
               'Connection': 'keep-alive',
-              'Cookie': self.linkai_cookie,
-              'Referer': 'https://chat.link-ai.tech/home',
+              'Referer': 'https://link-ai.tech/console/factory',
               'Sec-Fetch-Dest': 'empty',
               'Sec-Fetch-Mode': 'cors',
-              'Sec-Fetch-Site': 'same-origin',
-              'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-              'sec-ch-ua': '"Chromium";v="117", "Not;A=Brand";v="8"',
-              'sec-ch-ua-mobile': '?0',
-              'sec-ch-ua-platform': '"Linux"'
+              'Sec-Fetch-Site': 'same-origin'
             }
-            response = requests.request("GET", url, headers=headers, data=payload)
+            response = requests.request("POST", url, headers=headers, data=payload)
             if response.status_code == 200:
                 res_json = response.json()
                 if res_json.get("code") == 200:
-                    score = res_json.get("data").get("score")
-                    msg = f"linkai签到成功获得积分:{score}"
-                    logger.info(msg)
+                    token = res_json.get("data").get("token")
+                    if token:
+                        msg = f"linkai登录成功token: {token}"
+                        self.linkai_authorization = f"Bearer {token}"
+                        logger.info(msg)
                 else:
                     message = res_json.get("message")
-                    msg = f"linkai签到失败:{message}"
-                    logger.info("linkai签到失败 req content:{}".format(response.text))
+                    msg = f"linkai登录失败:{message}"
+                    logger.info("linkai登录失败 req content:{}".format(response.text))
             else:
                 r_code = response.status_code
-                msg = f"linkai签到失败 response status_code:{r_code}"
+                msg = f"linkai登录失败 response status_code:{r_code}"
                 logger.info(msg)
-        except:
+        except Exception as e:
+            logger.error(f"linkai 登录 {e}")
+        return token
+
+
+    def linkai_sign_in(self):
+        # linkai 每日签到
+        msg = ""
+        try:
+            if self.linkai_authorization == "":
+                logger.info("linkai token 不存在将执行登录操作")
+                self.link_ai_login()
+            for i in range(2):
+                url = "https://chat.link-ai.tech/api/chat/web/app/user/sign/in"
+                payload = {}
+                headers = {
+                  'Accept': 'application/json, text/plain, */*',
+                  'Accept-Language': 'zh-CN,zh;q=0.9',
+                  'Authorization': self.linkai_authorization,
+                  'Connection': 'keep-alive',
+                  'Referer': 'https://chat.link-ai.tech/home',
+                  'Sec-Fetch-Dest': 'empty',
+                  'Sec-Fetch-Mode': 'cors',
+                  'Sec-Fetch-Site': 'same-origin',
+                  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+                  'sec-ch-ua': '"Chromium";v="117", "Not;A=Brand";v="8"',
+                  'sec-ch-ua-mobile': '?0',
+                  'sec-ch-ua-platform': '"Linux"'
+                }
+                response = requests.request("GET", url, headers=headers, data=payload)
+                if response.status_code == 200:
+                    res_json = response.json()
+                    if res_json.get("code") == 200:
+                        score = res_json.get("data").get("score")
+                        msg = f"linkai签到成功获得积分:{score}"
+                        logger.info(msg)
+                    else:
+                        message = res_json.get("message")
+                        msg = f"linkai签到失败:{message}"
+                        logger.info("linkai签到失败 req content:{}".format(response.text))
+                    break
+                else:
+                    r_code = response.status_code
+                    msg = f"linkai签到失败 response status_code:{r_code}"
+                    logger.info(msg)
+                    # 重新获取 token
+                    time.sleep(2)
+                    self.link_ai_login()
+                time.sleep(2)
+        except Exception as e:
+            logger.error(f"linkai 积分签到 {e}")
             msg = "linkai签到失败 服务器内部错误"
         return msg
 
     def linkai_balance(self):
+        # linkai 总积分查看
         msg = ""
         try:
-            url = "https://chat.link-ai.tech/api/chat/web/app/user/get/balance"
-            payload = {}
-            headers = {
-              'Accept': 'application/json, text/plain, */*',
-              'Accept-Language': 'zh-CN,zh;q=0.9',
-              'Authorization': self.linkai_authorization,
-              'Connection': 'keep-alive',
-              'Host': 'chat.link-ai.tech',
-              'Cookie': self.linkai_cookie,
-              'Referer': 'https://chat.link-ai.tech/console/account',
-              'Sec-Fetch-Dest': 'empty',
-              'Sec-Fetch-Mode': 'cors',
-              'Sec-Fetch-Site': 'same-origin',
-              'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-              'sec-ch-ua': '"Chromium";v="117", "Not;A=Brand";v="8"',
-              'sec-ch-ua-mobile': '?0',
-              'sec-ch-ua-platform': '"Linux"'
-            }
-            response = requests.request("GET", url, headers=headers, data=payload)
-            if response.status_code == 200:
-                res_json = response.json()
-                if res_json.get("code") == 200:
-                    score = res_json.get("data").get("score")
-                    msg = f"linkai总积分:{score}"
-                    logger.info(msg)
+            if self.linkai_authorization == "":
+                logger.info("linkai token 不存在将执行登录操作")
+                self.link_ai_login()
+            for i in range(2):
+                url = "https://chat.link-ai.tech/api/chat/web/app/user/get/balance"
+                payload = {}
+                headers = {
+                  'Accept': 'application/json, text/plain, */*',
+                  'Accept-Language': 'zh-CN,zh;q=0.9',
+                  'Authorization': self.linkai_authorization,
+                  'Connection': 'keep-alive',
+                  'Host': 'chat.link-ai.tech',
+                  'Referer': 'https://chat.link-ai.tech/console/account',
+                  'Sec-Fetch-Dest': 'empty',
+                  'Sec-Fetch-Mode': 'cors',
+                  'Sec-Fetch-Site': 'same-origin',
+                  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+                  'sec-ch-ua': '"Chromium";v="117", "Not;A=Brand";v="8"',
+                  'sec-ch-ua-mobile': '?0',
+                  'sec-ch-ua-platform': '"Linux"'
+                }
+                response = requests.request("GET", url, headers=headers, data=payload)
+                if response.status_code == 200:
+                    res_json = response.json()
+                    if res_json.get("code") == 200:
+                        score = res_json.get("data").get("score")
+                        msg = f"linkai总积分:{score}"
+                        logger.info(msg)
+                    else:
+                        message = res_json.get("message")
+                        msg = f"linkai获取积分失败:{message}"
+                        logger.info("linkai获取积分失败 req content:{}".format(response.text))
+                    break
                 else:
-                    message = res_json.get("message")
-                    msg = f"linkai获取积分失败:{message}"
-                    logger.info("linkai获取积分失败 req content:{}".format(response.text))
-            else:
-                r_code = response.status_code
-                msg = f"linkai获取积分失败 response status_code:{r_code}"
-                logger.info(msg)
-        except:
+                    r_code = response.status_code
+                    msg = f"linkai获取积分失败 response status_code:{r_code}"
+                    logger.info(msg)
+                    # 重新获取 token
+                    time.sleep(2)
+                    self.link_ai_login()
+                time.sleep(2)
+        except Exception as e:
+            logger.error(f"linkai 总积分查看 {e}")
             msg = "linkai获取积分失败 服务器内部错误"
         return msg
