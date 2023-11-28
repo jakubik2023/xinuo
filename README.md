@@ -30,6 +30,19 @@ cp config.example.json config.json
 
 #enablep xinuo
 
+
+log
+
+[INFO][2023-11-28 10:04:16][Xinuo.py:214] - linkai token 不存在将执行登录操作
+[INFO][2023-11-28 10:04:17][Xinuo.py:146] - linkai登录成功token: xxxxxxxxxxxxxxxxxxxxxxxx
+[INFO][2023-11-28 10:04:17][Xinuo.py:240] - linkai总积分:23411
+[INFO][2023-11-28 10:04:17][wechat_channel.py:191] - [WX] sendMsg=Reply(type=TEXT, content=[🫶] linkai积分
+linkai总积分:23411), receiver=@1d6231b36d7eb3b0fc35d5458ceae3478113062683aa812c12f69790017d0655
+[INFO][2023-11-28 10:04:38][Xinuo.py:194] - linkai签到失败 req content:{"success":false,"code":834,"message":"今日已签到，请明日再来！","data":null}
+[INFO][2023-11-28 10:04:39][wechat_channel.py:191] - [WX] sendMsg=Reply(type=TEXT, content=[🫶] linkai签到
+linkai签到失败:今日已签到，请明日再来！), receiver=@1d6231b36d7eb3b0fc35d5458ceae3478113062683aa812c12f69790017d0655
+
+
 1: 
 input->
     linkai签到
