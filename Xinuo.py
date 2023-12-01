@@ -99,7 +99,8 @@ class Xinuo(Plugin):
               'Sec-Fetch-Mode': 'cors',
               'Sec-Fetch-Site': 'same-origin'
             }
-            response = requests.request("POST", url, headers=headers, data=payload)
+            response = requests.request("POST", url, headers=headers,
+                                        data=payload, timeout=20)
             if response.status_code == 200:
                 res_json = response.json()
                 if res_json.get("code") == 200:
@@ -145,7 +146,8 @@ class Xinuo(Plugin):
                   'sec-ch-ua-mobile': '?0',
                   'sec-ch-ua-platform': '"Linux"'
                 }
-                response = requests.request("GET", url, headers=headers, data=payload)
+                response = requests.request("GET", url, headers=headers,
+                                            data=payload, timeout=20)
                 if response.status_code == 200:
                     res_json = response.json()
                     if res_json.get("code") == 200:
@@ -195,7 +197,8 @@ class Xinuo(Plugin):
                   'sec-ch-ua-mobile': '?0',
                   'sec-ch-ua-platform': '"Linux"'
                 }
-                response = requests.request("GET", url, headers=headers, data=payload)
+                response = requests.request("GET", url, headers=headers,
+                                            data=payload, timeout=20)
                 if response.status_code == 200:
                     res_json = response.json()
                     if res_json.get("code") == 200:
