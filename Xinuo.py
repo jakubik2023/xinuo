@@ -190,15 +190,19 @@ class Xinuo(Plugin):
                     if len(translateResult) > 0:
                         end_fanyi  = translateResult[0].get("tgt")
                         if end_fanyi:
-                            msg = f"数据解析失败: {translateResult[0]}"
+                            msg = f"原始本文:{fanyi_text}\n翻译后文本:{end_fanyi}"
                         else:
-                            msg = f"数据解析失败: {translateResult}"
+                            msg = f"数据解析失败: {translateResult[0]}"
+                            logger.info(f"有道翻译 {msg}")
                     else:
-                        msg = f"原始本文:{fanyi_text}\n翻译后文本:{end_fanyi}"
+                        msg = f"数据解析失败: {translateResult}"
+                        logger.info(f"有道翻译 {msg}")
                 else:
                     msg = f"返回状态码异常 code:{r_json_code}"
+                    logger.info(f"有道翻译 {msg}")
             else:
                 msg = f"请求状态码异常 code:{r_code}"
+                logger.info(f"有道翻译 {msg}")
         except Exception as e:
             logger.error(f"有道翻译 {e}")
             msg = "有道翻译 服务器内部错误"
