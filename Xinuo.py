@@ -11,8 +11,13 @@
 import re
 import json
 import time
+import base64
+import random
+import hashlib
 import plugins
 import requests
+from Crypto.Cipher import AES
+from fake_useragent import UserAgent
 from bridge.reply import Reply, ReplyType
 from plugins import *
 
@@ -59,6 +64,15 @@ class Xinuo(Plugin):
             reply.content += f"{msg}"
             e_context["reply"] = reply
             e_context.action = EventAction.BREAK_PASS
+        elif content[:2] == "翻译":
+            fanyi_text = content[2:]
+            msg = self.youdao_fanyi()
+            reply = Reply()
+            reply.type = ReplyType.TEXT
+            reply.content = "翻译\n"
+            reply.content += f"{msg}"
+            e_context["reply"] = reply
+            e_context.action = EventAction.BREAK_PASS
         elif content == "测试":
             # msg = self.linkai_balance()
             msg = "测试"
@@ -77,6 +91,118 @@ class Xinuo(Plugin):
         help_text += "输入 'linkai积分'， 进行总积分获取\n"
         help_text += "输入 '测试'， 测试\n"
         return help_text
+
+
+    def random_user_agent(self):
+        U = UserAgent()
+        return U.random
+
+    def random_youdao_cookie(self):
+        user_id = random.randrange(100000000, 999999999)
+        ip_address = ".".join(str(random.randrange(0, 256)) for _ in range(4))
+        cookie = f"OUTFOX_SEARCH_USER_ID={user_id}@{ip_address}"
+        return cookie
+
+    def youdao_fanyi(self, fanyi_text):
+        msg = ''
+        try:
+            cookie = self.random_youdao_cookie()
+            ua = self.random_user_agent()
+            headers = {
+                'user-agent': ua,
+                'Cookie': cookie,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json, text/plain, */*',
+                'Origin': 'https://fanyi.youdao.com',
+                'Referer': 'https://fanyi.youdao.com/',
+                'Host': 'dict.youdao.com',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Accept-Language': 'zh-CN,zh;q=0.9',
+            }
+            mysticTime = str(int(time.time() * 1000))
+            url = 'https://dict.youdao.com/webtranslate'
+            client = "fanyideskweb"
+            keyid = "webfanyi"
+            pointParam = "client,mysticTime,product"
+            appVersion = "1.0.0"
+            vendor = "web"
+            keyfrom = "fanyi.web"
+            key_ = 'fsdsogkndfokasodnaso'
+            encoding='gb18030'
+            md5_text = f'client={client}&mysticTime={mysticTime}&product={keyid}&key={key_}'
+            md5 = hashlib.md5(md5_text.encode(encoding)).hexdigest()
+            payload = {
+                'i': fanyi_text,
+                'from': 'auto',
+                'to': '',
+                'domain': '0',
+                'dictResult': 'true',
+                'keyid': keyid,
+                'sign': md5,
+                'client': client,
+                'product': keyid,
+                'appVersion': appVersion,
+                'vendor': vendor,
+                'pointParam': pointParam,
+                'mysticTime': mysticTime,
+                'keyfrom': keyfrom,
+                'mid': '1',
+                'screen': '1',
+                'model': '1',
+                'network': 'wifi',
+                'abtest': '0',
+                'yduuid': 'abcdefg',
+            }
+            response = requests.post(url, data=payload, headers= headers)
+            r_code = response.status_code
+            if r_code == 200:
+                res_text = response.text
+                decodeiv = "ydsecret://query/iv/C@lZe2YzHtZ2CYgaXKSVfsb7Y4QWHjITPPZ0nQp87fBeJ!Iv6v^6fvi2WN@bYpJ4"
+                decodekey = "ydsecret://query/key/B*RGygVywfNBwpmBaZg*WT7SIOUP2T0C9WHMZN39j^DAdaZhAnxvGcCY6VYFwnHl"
+                key = hashlib.md5(decodekey.encode(encoding=encoding)).digest()
+                iv = hashlib.md5(decodeiv.encode(encoding=encoding)).digest()
+                aes_en = AES.new(key, AES.MODE_CBC, iv)
+                data_new = base64.urlsafe_b64decode(res_text)
+                result_text = aes_en.decrypt(data_new).decode('utf-8')
+                remove_text = "}".join(result_text.split("}")[:-1]) + "}"
+                res_json = json.loads(remove_text)
+                """
+                {
+                   "code":0,
+                   "dictResult":{
+
+                   },
+                   "translateResult":[
+                       [
+                           {
+                               "tgt":"Automatic production test",
+                               "src":"自动生编测试",
+                               "srcPronounce":"zì dòng shēng biān cèshì"
+                           }
+                       ]
+                   ],
+                   "type":"zh-CHS2en"
+               }
+                """
+                r_json_code = res_json.get("code")
+                if r_json_code == 0:
+                    translateResult = res_json.get("translateResult")
+                    if len(translateResult) > 0:
+                        end_fanyi  = translateResult[0].get("tgt")
+                        if end_fanyi:
+                            msg = f"数据解析失败: {translateResult[0]}"
+                        else:
+                            msg = f"数据解析失败: {translateResult}"
+                    else:
+                        msg = f"原始本文:{fanyi_text}\n翻译后文本:{end_fanyi}"
+                else:
+                    msg = f"返回状态码异常 code:{r_json_code}"
+            else:
+                msg = f"请求状态码异常 code:{r_code}"
+        except Exception as e:
+            logger.error(f"有道翻译 {e}")
+            msg = "有道翻译 服务器内部错误"
+        return msg
 
 
     def link_ai_login(self):
