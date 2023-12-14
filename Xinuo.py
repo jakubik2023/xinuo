@@ -66,7 +66,7 @@ class Xinuo(Plugin):
             e_context.action = EventAction.BREAK_PASS
         elif content[:2] == "翻译":
             fanyi_text = content[2:]
-            msg = self.youdao_fanyi()
+            msg = self.youdao_fanyi(fanyi_text)
             reply = Reply()
             reply.type = ReplyType.TEXT
             reply.content = "翻译\n"
@@ -89,6 +89,7 @@ class Xinuo(Plugin):
             return help_text
         help_text += "输入 'linkai签到'， 进行签到\n"
         help_text += "输入 'linkai积分'， 进行总积分获取\n"
+        help_text += "输入 '翻译+内容'， 进行有道翻译\n"
         help_text += "输入 '测试'， 测试\n"
         return help_text
 
