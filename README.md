@@ -48,6 +48,16 @@ linkai总积分:23411), receiver=@1d6231b36d7eb3b0fc35d5458ceae3478113062683aa81
 linkai签到失败:今日已签到，请明日再来！), receiver=@1d6231b36d7eb3b0fc35d5458ceae3478113062683aa812c12f69790017d0655
 
 
+
+[INFO][2023-12-15 16:20:47][Xinuo.py:89] - 有道翻译: 翻译一只桔黄色的猫
+[INFO][2023-12-15 16:20:47][Xinuo.py:227] - 有道翻译: [[{'tgt': 'An orange cat', 'src': '一只桔黄色的猫', 'srcPronounce': 'yī zhī jié huáng sè demāo'}]]
+[INFO][2023-12-15 16:20:47][wechat_channel.py:191] - [WX] sendMsg=Reply(type=TEXT, content=[🫶] 翻译
+原始本文:一只桔黄色的猫
+翻译后文本:An orange cat), receiver=@ee2a5dbeb0895072ec88005c9bcc36c68af9a959847ff3b1c325fbbcb3bc5449
+
+
+
+
 1: 
 input->
     linkai签到
