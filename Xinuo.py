@@ -189,7 +189,7 @@ class Xinuo(Plugin):
                 if r_json_code == 0:
                     translateResult = res_json.get("translateResult")
                     if len(translateResult) > 0:
-                        end_fanyi  = translateResult[0].get("tgt")
+                        end_fanyi  = translateResult[0][0].get("tgt")
                         if end_fanyi:
                             msg = f"原始本文:{fanyi_text}\n翻译后文本:{end_fanyi}"
                         else:
