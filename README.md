@@ -5,7 +5,7 @@
 linkai积分签到
 linkai总积分查看
 翻译   // 逆向破解有道翻译接口   翻译+要翻译的内容 + 是连接起来不是添加+这个符号
-       // 需要安装 pip install fake-useragent
+       // 需要安装 pip install fake-useragent、  pycryptodome
 
 
 配合定时任务timetask 运行  完美!!!
